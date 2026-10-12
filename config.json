@@ -1,0 +1,34 @@
+{
+    "version": "3.0.0",
+    "backend": {
+        "sevenZipPath": "C:\\Program Files\\7-Zip\\7z.exe"
+    },
+    "passwords": [
+        "123456",
+        "abc",
+        "999888"
+    ],
+    "delete": {
+        "mode": "recycle",
+        "filePatterns": [
+            "*.url",
+            "*推广*",
+            "*福利*"
+        ],
+        "dirPatterns": [
+            "_MACOSX"
+        ],
+        "protectArchives": true
+    },
+    "behavior": {
+        "maxDepth": 64
+    },
+    "safety": {
+        "protectedExtensions": [
+            ".apk", ".epub", ".xps", ".jar", ".wmz", ".kmz", ".kwd", ".odt", ".odp", ".ott",
+            ".oxps", ".xpi", ".xpt", ".sxc", ".sxd", ".sxi", ".sxw",
+            ".exe", ".dll", ".msi", ".sys", ".scr", ".cpl", ".ocx", ".lnk", ".url",
+            ".docx", ".xlsx", ".pptx", ".docm", ".xlsm", ".pptm"
+        ]
+    }
+}

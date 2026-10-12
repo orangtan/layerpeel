@@ -1,0 +1,14 @@
+# 统一行尾，避免 Windows / Linux 来回换行产生 diff 噪音
+* text=auto eol=lf
+
+# 批处理必须是 CRLF —— LF 的 .bat 会被 cmd 逐行当命令执行（连 rem 注释都报错）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制
+*.png binary
+*.ico binary
+*.exe binary
+*.dll binary
+*.zip binary
+*.7z binary
