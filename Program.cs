@@ -50,6 +50,12 @@ namespace LayerPeel
             }
         }
 
+        /// <summary>所有认得的开关（拼错时给个提醒，避免静默失效）</summary>
+        static readonly string[] KnownFlags = new string[]
+        { "clean", "cleanup", "config", "depth", "fix-acl", "flatten", "gui", "help",
+          "launcher-opens", "list-backups", "migrate", "mode", "reset-config",
+          "restore-acl", "acl-level", "ui-selftest", "undo" };
+
         static readonly string[] ValueFlags = new string[]
         { "mode", "depth", "config", "migrate", "undo", "acl-level", "restore-acl", "ui-selftest" };
 
@@ -72,9 +78,81 @@ namespace LayerPeel
                     if (Array.IndexOf(ValueFlags, key) >= 0 && i + 1 < argv.Length) a.Flags[key] = argv[++i];
                     else a.Flags[key] = "1";
                 }
+                else if (s.Length > 1 && (s[0] == '-' || s[0] == '/') && !File.Exists(s) && !Directory.Exists(s))
+                {
+                    // 支持 -h / /? / /help 这类写法。
+                    // 先排除真实存在的路径：相对路径可能以 / 开头，别把路径当开关。
+                    string k = s.Substring(1).TrimEnd('?');
+                    // -h / /? / /help 统一收敛到 help，别让 -h 落到“没带参数就去开窗口”那条路
+                    if (k.Length == 0 || k == "h" || k == "?") k = "help";
+                    a.Flags[k] = "1";
+                }
                 else a.Targets.Add(s);
             }
             return a;
+        }
+
+        static string UsageText()
+        {
+            return string.Join("\r\n", new string[]
+            {
+                "layerpeel 3.0 —— 解压 · 去套娃助手",
+                "",
+                "用法：",
+                "  layerpeel.exe [选项] <目标...>",
+                "",
+                "不带任何参数（或带 --gui）会直接打开图形界面。",
+                "",
+                "任务（默认是「解压 · 去套娃」）：",
+                "  --clean              删除指定文件（按 config.json 里的规则）",
+                "  --flatten            仅去套娃（压平目录层级，不碰压缩包）",
+                "  --fix-acl            修复目录权限（动手前自动备份 ACL）",
+                "  --cleanup            清理残留（_layerpeel_tmp_* 临时目录）",
+                "",
+                "常用选项：",
+                "  --mode <值>          覆盖删除策略：recycle | staging | keep",
+                "  --depth <n>          套娃深度上限（默认 64）",
+                "  --acl-level <n>      修复力度：1 只授权 | 2 重置+授权 | 3 接管属主+重置+授权",
+                "  --config <路径>      用指定的配置文件（默认程序目录下的 config.json）",
+                "",
+                "其它：",
+                "  --list-backups       列出权限备份",
+                "  --restore-acl <文件> 从备份还原权限",
+                "  --undo <目录>        从暂存目录还原",
+                "  --migrate <txt>      从 f-keydle 2.x 的 txt 配置迁移密码与规则",
+                "  --reset-config       配置恢复默认值（会先备份）",
+                "  --gui                强制打开界面",
+                "  --ui-selftest <png>  把界面渲染成 PNG 后退出（验收界面用）",
+                "  --launcher-opens     启动器协议（右键菜单/启动器传入，无需手敲）",
+                "  --help               显示这段帮助",
+                "",
+                "示例：",
+                "  layerpeel.exe D:\\下载\\某某合集",
+                "  layerpeel.exe --clean --mode keep D:\\下载\\某某合集",
+                "  layerpeel.exe --flatten --depth 8 D:\\下载",
+            });
+        }
+
+        /// <summary>显示用法。有父控制台就打控制台；没有（双击运行）就用消息框，别让用户以为程序没反应。</summary>
+        static void ShowUsage()
+        {
+            string usage = UsageText();
+            // 输出被重定向（管道 / 文件）时直接用 stdout —— 否则管道里什么都收不到
+            if (Console.IsOutputRedirected)
+            {
+                Console.Out.WriteLine(usage);
+                Console.Out.Flush();
+                return;
+            }
+            if (AttachConsole(ATTACH_PARENT_PROCESS))
+            {
+                Console.Out.WriteLine(usage);
+                Console.Out.Flush();
+                return;
+            }
+            // 双击运行：没有父控制台也没有重定向，用消息框，别让用户以为程序没反应
+            System.Windows.Forms.MessageBox.Show(usage, "layerpeel 3.0 — 命令行用法",
+                System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
         }
 
         static string FmtBytes(long n)
@@ -117,12 +195,21 @@ namespace LayerPeel
             SetupPaths();
             Args args = ParseArgs(argv);
 
+            // --help：打印用法后退出。
+            // 必须放在下面 gui 判断之前，否则没带参数会被当成要开界面，敲 --help 反而弹个窗口。
+            if (args.Has("help")) { ShowUsage(); return 0; }
+
             // 离线自检：把界面渲染成 PNG 后退出（用来验收界面长什么样）
             string st = args.Get("ui-selftest");
             if (st != null) return WpfUi.SelfTest(st);
 
             bool gui = args.Targets.Count == 0 || args.Has("gui") || args.Has("launcher-opens");
             if (!gui) AttachConsole(ATTACH_PARENT_PROCESS);
+
+            // 拼错的开关给个提示，别让它静默失效
+            foreach (string k in args.Flags.Keys)
+                if (k != "help" && Array.IndexOf(KnownFlags, k) < 0)
+                    Console.Error.WriteLine("未知参数：--" + k + "（用 --help 看用法）");
 
             // 迁移 2.1 配置
             string migrate = args.Get("migrate");

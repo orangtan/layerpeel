@@ -93,3 +93,17 @@ layerpeel 3.0\
 随包分发 **7-Zip** 的官方二进制 `7z.exe` / `7z.dll`（未做任何修改）。
 版权归 Igor Pavlov，按 GNU LGPL 发布（unRAR 部分另有额外限制）。
 来源 <https://www.7-zip.org/>，许可 <https://www.7-zip.org/license.txt>。
+
+## 命令行
+
+GUI 之外还有一套命令行（主要给自测脚本和批量场景用）：
+
+```bat
+发布\layerpeel.exe --help                     :: 看全部开关
+发布\layerpeel.exe D:\下载\某某合集             :: 解压 + 去套娃
+发布\layerpeel.exe --clean --mode keep D:\下载  :: 只清垃圾，保留原包
+发布\layerpeel.exe --flatten --depth 8 D:\下载  :: 只压平目录，不碰压缩包
+发布\layerpeel.exe --list-backups              :: 看权限备份
+```
+
+`--help` / `-h` / `/?` 都行。没带任何参数（或带 `--gui`）才会开图形界面。
