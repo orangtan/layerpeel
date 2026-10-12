@@ -57,7 +57,7 @@ namespace LayerPeel
         ComboBox _delMode, _aclLevel;
         CheckBox _protect;
         StackPanel _statsHost, _backupPanel, _optionHost, _passwordCardInner;
-        TextBlock _statusText, _titleTask, _pageTitle, _pageSub, _statusBarText, _targetCountText, _hint, _maxGlyph;
+        TextBlock _statusText, _titleTask, _pageTitle, _pageSub, _statusBarText, _targetCountText, _hint, _maxGlyph, _versionText;
         System.Windows.Shapes.Ellipse _statusDot;
         Button _btnStart, _btnStop;
 
@@ -326,7 +326,7 @@ namespace LayerPeel
             logo.CornerRadius = new CornerRadius(7);
             logo.Background = Bg("B.Accent");
             var lt = new TextBlock();
-            lt.Text = "F"; lt.FontSize = 13; lt.FontWeight = FontWeights.Bold;
+            lt.Text = "L"; lt.FontSize = 13; lt.FontWeight = FontWeights.Bold;
             lt.Foreground = Brushes.White;
             lt.HorizontalAlignment = HorizontalAlignment.Center;
             lt.VerticalAlignment = VerticalAlignment.Center;
@@ -753,10 +753,10 @@ namespace LayerPeel
             _statusBarText.Margin = new Thickness(7, 0, 0, 0);
             l.Children.Add(_statusBarText);
             g.Children.Add(l);
-            var r = Txt("layerpeel 3.0.0 · 后端 7-Zip", "Muted", 0);
-            r.HorizontalAlignment = HorizontalAlignment.Right;
-            r.VerticalAlignment = VerticalAlignment.Center;
-            g.Children.Add(r);
+            _versionText = Txt("layerpeel · 后端 7-Zip", "Muted", 0);
+            _versionText.HorizontalAlignment = HorizontalAlignment.Right;
+            _versionText.VerticalAlignment = VerticalAlignment.Center;
+            g.Children.Add(_versionText);
             border.Child = g;
             return border;
         }
@@ -1079,6 +1079,7 @@ namespace LayerPeel
                 _dirPatterns.Text = string.Join("\r\n", Json.StrList(del, "dirPatterns").ToArray());
                 _protect.IsChecked = Json.Bool(del, "protectArchives", true);
                 string depth = Convert.ToString(Json.PathInt(cfg.Data, "behavior.maxDepth", 64));
+                _versionText.Text = "layerpeel " + Json.Str(cfg.Data, "version", "3.0.0") + " · 后端 7-Zip";
                 _depth.Text = depth;
                 if (_depth2 != null) _depth2.Text = depth;
                 string mode = Json.PathStr(cfg.Data, "delete.mode", "recycle");
